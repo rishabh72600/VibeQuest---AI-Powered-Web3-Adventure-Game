@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VibeQuest - AI-Powered Web3 Adventure Game</title>
+<style>
+  /* Fonts */
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@400;600&display=swap');
+
+  /* Reset */
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+  }
+  body, html {
+    height: 100%;
+    font-family: 'Poppins', sans-serif;
+    background: radial-gradient(circle at center, #2d0c03 0%, #150803 80%);
+    overflow-x: hidden;
+    color: #FFE5B4;
+    user-select: none;
+  }
+
+  /* Ambient background animation */
+  body::before {
+    content: "";
+    position: fixed;
+    width: 200vw;
+    height: 200vh;
+    top: -50vh;
+    left: -50vw;
+    background:
+      radial-gradient(circle at 20% 25%, #ff7a00aa, transparent 40%),
+      radial-gradient(circle at 80% 75%, #ff4000cc, transparent 35%),
+      radial-gradient(circle at 50% 50%, #ff7f50bb, transparent 50%);
+    animation: pulseOrbs 15s ease-in-out infinite alternate;
+    z-index: -1;
+    filter: blur(45px);
+  }
+  @keyframes pulseOrbs {
+    0% {
+      transform: translate(0, 0) scale(1);
+      opacity: 0.9;
+    }
+    100% {
+      transform: translate(40px, 50px) scale(1.1);
+      opacity: 0.7;
+    }
+  }
+
+  /* Container */
+  .container {
+    max-width: 960px;
+    margin: 2rem auto 3rem;
+    background: rgba(25, 10, 5, 0.85);
+    border-radius: 25px;
+    padding: 1.8rem 2.2rem;
+    box-shadow:
+      0 0 20px #ff6600cc,
+      inset 0 0 18px #ff4a00cc,
+      0 0 40px #ff66330044;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 1.6rem;
+  }
+  header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3.4rem;
+    color: #ff7f2a;
+    text-shadow:
+      0 0 6px #ff7f2a,
+      0 0 20px #ff6611,
+      0 0 35px #ff4400;
+  }
+  header h2 {
+    margin-top: 6px;
+    font-weight: 600;
+    font-size: 1.3rem;
+    letter-spacing: 1.4px;
+    color: #ffcea1dd;
+  }
+  header p {
+    margin-top: 12px;
+    font-style: italic;
+    color: #ffac5eaa;
+    font-weight: 600;
+  }
+
+  /* Login box */
+  #login-box {
+    background: #340f02cc;
+    border-radius: 18px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: inset 0 0 15px #ff7f2aa8;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    justify-content: center;
+    animation: glowPulse 3.2s ease-in-out infinite alternate;
+  }
+  #login-box input {
+    flex-grow: 1;
+    min-width: 240px;
+    padding: 14px 20px;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #ff6f21;
+    background: #2a0a01;
+    border: 1.5px solid #ff6f21;
+    border-radius: 12px;
+    outline-offset: 3px;
+    transition: border-color 0.3s ease;
+  }
+  #login-box input::placeholder {
+    color: #ff9a61cc;
+    font-weight: 400;
+  }
+  #login-box input:focus {
+    border-color: #ffaa44;
+    box-shadow: 0 0 12px #ffaa44aa;
+  }
+  #login-box button {
+    padding: 14px 36px;
+    background: #ff7f2a;
+    font-weight: 700;
+    font-size: 1.15rem;
+    border-radius: 14px;
+    border: none;
+    color: #fff;
+    box-shadow:
+      0 4px 12px #ff7f2aee,
+      0 0 16px #ff7f2ab3,
+      inset 0 0 8px #ffa537dd;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  #login-box button:hover:not(:disabled) {
+    background: #ff9a44;
+    box-shadow:
+      0 6px 18px #ffaa45ff,
+      0 0 22px #ffaa4522,
+      inset 0 0 12px #ffaa45ff;
+  }
+  #login-box button:disabled {
+    background: #4e210f;
+    border-color: #4e210f;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  #user-info {
+    flex-basis: 100%;
+    text-align: center;
+    margin-top: 1rem;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #ffb76dcc;
+    text-shadow: 0 0 5px #ffbb7514;
+  }
+
+  /* Game Window */
+  #game-window {
+    color: #f0c498;
+    display: none;
+    flex-direction: column;
+    gap: 1.4rem;
+    position: relative;
+  }
+
+  /* Token Balance */
+  #token-balance {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 1.6rem;
+    color: #ffb84d;
+    text-align: right;
+    padding: 0 1rem;
+    user-select: none;
+    filter: drop-shadow(0 0 5px #ff7f2aaa);
+  }
+
+  /* Story Text */
+  #story-text {
+    background: rgba(255, 127, 42, 0.12);
+    border-radius: 20px;
+    padding: 1.6rem 2rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+    min-height: 160px;
+    line-height: 1.6;
+    box-shadow:
+      inset 0 0 15px #ff7f2aae,
+      0 0 20px #ff7f2a88;
+    white-space: pre-line;
+    overflow-y: auto;
+  }
+
+  /* Choices Container */
+  #choices {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #choices button {
+    flex: 1 0 140px;
+    background: linear-gradient(145deg, #ff7f2aee, #ff4f0dbb);
+    border-radius: 18px;
+    padding: 12px 16px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-shadow: 0 0 6px #ff3c00bb;
+    box-shadow:
+      0 0 10px #ff6318cc,
+      0 0 15px #ff6318cc inset;
+    border: none;
+    cursor: pointer;
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.3s ease,
+      background 0.4s ease;
+    user-select: none;
+  }
+  #choices button:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow:
+      0 0 30px #ff9922ff,
+      0 0 40px #ff972211 inset;
+    background: linear-gradient(145deg, #ffa63b, #ff6921);
+  }
+  #choices button:disabled {
+    background: #442a15cc;
+    cursor: not-allowed;
+    box-shadow: none;
+    color: #a66e3dcc;
+  }
+
+  /* Voting Panel */
+  #voting-panel {
+    margin-top: 3rem;
+    background: #3e1c07cc;
+    border-radius: 20px;
+    padding: 1.8rem 2.2rem;
+    box-shadow:
+      0 0 20px #ff7f2acc,
+      inset 0 0 20px #ff6c1d88;
+    display: none;
+  }
+  #voting-panel h3 {
+    color: #ffb86c;
+    font-weight: 900;
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    text-shadow: 0 0 10px #ffa832cc;
+  }
+  #vote-list {
+    list-style: none;
+    padding: 0;
+    max-width: 560px;
+    margin: 0 auto 1.6rem;
+  }
+  #vote-list li {
+    background: #582b0d;
+    margin-bottom: 12px;
+    padding: 12px 18px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #fff1d6;
+    box-shadow:
+      0 0 12px #ff7f0098,
+      inset 0 0 8px #ffad3355;
+  }
+  #vote-list button {
+    color: #ffebbe;
+    font-weight: 900;
+    font-size: 1rem;
+    background: #ff7f00cc;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 12px;
+    box-shadow:
+      0 0 12px #ff7f22cc,
+      inset 0 0 10px #ff7f22aa;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  #vote-list button:hover:not(:disabled) {
+    background: #ff9e39cc;
+    box-shadow:
+      0 0 20px #ffaa33ff,
+      inset 0 0 15px #ffaa33ee;
+  }
+  #vote-list button:disabled {
+    background: #642b03cc;
+    box-shadow: none;
+    cursor: not-allowed;
+    color: #d4ae84aa;
+  }
+  #refreshVotesBtn {
+    display: block;
+    margin: 0 auto;
+    background: #ff7f0088;
+    padding: 10px 50px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    box-shadow:
+      0 0 25px #ff7f22cc,
+      inset 0 0 20px #ff7f22aa;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  #refreshVotesBtn:hover {
+    background: #ff9e3288;
+  }
+
+  /* Notification */
+  #notification {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    background: #ff7f2aee;
+    padding: 14px 28px;
+    color: #fff;
+    font-weight: 700;
+    border-radius: 30px;
+    box-shadow: 0 0 25px #ff7f33cc;
+    user-select: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    z-index: 999999;
+    font-size: 1.15rem;
+  }
+
+  /* Loot box animation */
+  #loot-box {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 200px;
+    height: 200px;
+    margin-left: -100px;
+    margin-top: -100px;
+    background: linear-gradient(145deg, #ff7f2aff, #ff440011);
+    border-radius: 32px 32px 12px 12px;
+    box-shadow: 0 0 40px #ff7f2aff;
+    display: none;
+    cursor: pointer;
+    user-select: none;
+    z-index: 9999;
+    overflow: hidden;
+  }
+  #loot-box .lid {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 140px;
+    height: 80px;
+    margin-left: -70px;
+    background: linear-gradient(90deg, #ff8837cc, #ffbb60cc);
+    border-radius: 30px 30px 10px 10px;
+    box-shadow: 0 0 15px #ffbb60cc;
+    transform-origin: center bottom;
+    animation: lidIdle 3s ease-in-out infinite;
+  }
+  #loot-box .box-base {
+    position: absolute;
+    bottom: 0;
+    width: 180px;
+    height: 130px;
+    left: 50%;
+    margin-left: -90px;
+    background: linear-gradient(180deg, #ff6e18, #c14701);
+    border-radius: 0 0 32px 32px;
+    box-shadow: inset 0 5px 7px #ffbf40aa;
+  }
+  #loot-box.open .lid {
+    animation: lidOpen 1s forwards;
+  }
+  @keyframes lidIdle {
+    0%, 100% { transform: rotate(0deg);}
+    50% { transform: rotate(-4deg);}
+  }
+  @keyframes lidOpen {
+    0% { transform: rotate(0deg);}
+    100% { transform: rotate(-90deg);}
+  }
+
+  #loot-reward {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    margin-left: -30px;
+    font-weight: 900;
+    font-size: 1.6rem;
+    text-shadow: 0 0 15px #ffff74cc;
+    color: #ffeea4;
+    opacity: 0;
+    animation: rewardAppear 2.5s ease forwards;
+    pointer-events: none;
+  }
+  @keyframes rewardAppear {
+    0% { opacity: 0; transform: translateY(40px);}
+    100% { opacity: 1; transform: translateY(0);}
+  }
+
+  /* ORNG price ticker */
+  #orng-ticker {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: #391702cc;
+    color: #ff981f;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    padding: 12px 22px;
+    border-radius: 20px;
+    box-shadow: 0 0 25px #ff7f22cc;
+    user-select: none;
+    z-index: 10000;
+  }
+
+</style>
+</head>
+<body>
+  <div id="orng-ticker">ORNG Price: $1.25</div>
+  <header>
+    <h1>VibeQuest</h1>
+    <h2>AI-Powered Web3 Adventure Game</h2>
+    <p><em>Built with Orange ID and ORNG tokens</em></p>
+  </header>
+
+  <section class="container" id="login-box" role="region" aria-label="Orange ID login">
+    <input 
+      type="text" 
+      id="orangeIdInput" 
+      placeholder="Enter your Orange ID" 
+      aria-describedby="login-instruction"
+      aria-required="true"
+      aria-label="Orange ID input"
+      autocomplete="username"
+    />
+    <button id="loginBtn" aria-label="Login with Orange ID">Login</button>
+    <div id="user-info" role="alert" aria-live="polite" aria-atomic="true"></div>
+  </section>
+
+  <section class="container" id="game-window" aria-live="polite" aria-atomic="true" role="main" aria-label="Game adventure window">
+    <div id="token-balance" aria-live="polite" aria-atomic="true" aria-label="Token balance">ORNG: 0</div>
+    <div id="story-text" aria-atomic="true" aria-live="polite" aria-label="Current quest story text"></div>
+    <div id="choices" role="list" aria-label="Quest choices"></div>
+  </section>
+
+  <section class="container" id="voting-panel" aria-live="polite" aria-atomic="true" role="region" aria-label="Community voting panel">
+    <h3>Community Feature Voting</h3>
+    <ul id="vote-list" role="list"></ul>
+    <button id="refreshVotesBtn">Refresh Votes</button>
+  </section>
+
+  <div id="loot-box" role="dialog" aria-modal="true" aria-labelledby="lootTitle" tabindex="-1" aria-hidden="true">
+    <div class="lid"></div>
+    <div class="box-base"></div>
+    <div id="loot-reward" aria-live="assertive" aria-atomic="true"></div>
+  </div>
+
+  <div id="notification" role="alert" aria-live="assertive"></div>
+
+  <footer aria-label="Footer">
+    <p>&copy; 2025 Orange Web3. Powered by Orange ID &amp; ORNG.</p>
+  </footer>
+
+<script>
+  /* ==== Variables ==== */
+  const LOCAL_STORAGE_KEY = "vibequest_state_enhanced";
+
+  let gameState = {
+    user: null,
+    orngBalance: 0,
+    currentQuest: "start",
+    quests: {},
+    votes: {},
+    userVotes: {}
+  };
+
+  // AI-like story quests enhanced with some animation triggers
+  const quests = {
+    start: {
+      text: "You awaken in a glowing mystical orange forest. The ambient hum of VibeQuest vibrates through the air. Where will you go?",
+      choices: [
+        { text: "Explore the vibrant woods", next: "deepWoods", cost: 0 },
+        { text: "Visit the neon-lit village", next: "village", cost: 0 },
+        { text: "Scan your profile data", next: "profile", cost: 0 }
+      ]
+    },
+    deepWoods: {
+      text: "In the woods, you find a pulsating artifact radiating ORNG energy. Do you take it?",
+      choices: [
+        { text: "Seize the artifact (+50 ORNG)", next: "artifactTaken", cost: 0, reward: 50 },
+        { text: "Respect its power and move on", next: "leftArtifact", cost: 0 }
+      ]
+    },
+    artifactTaken: {
+      animation: "lootBox",
+      text: "The artifact floods your account with 50 ORNG tokens, shimmering in your balance!",
+      choices: [
+        { text: "Head to the village", next: "village" },
+        { text: "Deeper into the woods", next: "deepWoods" }
+      ],
+      reward: 50
+    },
+    leftArtifact: {
+      text: "A sprite appears, offering a quest to find a lost melody in ancient ruins. Will you accept?",
+      choices: [
+        { text: "Accept the quest", next: "spriteQuest" },
+        { text: "Decline and return to village", next: "village" }
+      ]
+    },
+    spriteQuest: {
+      text: "The ruins echo with forgotten tunes; solving the musical puzzle grants a reward!",
+      choices: [
+        { text: "Solve the puzzle (+100 ORNG)", next: "ruins", cost: 0, reward: 100 },
+        { text: "Retreat to the village", next: "village" }
+      ]
+    },
+    ruins: {
+      animation: "lootBox",
+      text: "Puzzle solved! You earn 100 ORNG tokens — your balance gleams with power!",
+      choices: [
+        { text: "Celebrate in the village", next: "village" }
+      ],
+      reward: 100
+    },
+    village: {
+      text: "You reach the village hub, alive with neon lights and vibrant adventurers. What next?",
+      choices: [
+        { text: "Visit the glowing market (-30 ORNG)", next: "market", cost: 30 },
+        { text: "Check your profile", next: "profile" },
+        { text: "Join community voting", next: "voting" }
+      ]
+    },
+    market: {
+      text: "You purchased rare adventure supplies. They will help you on your journey.",
+      choices: [
+        { text: "Back to village center", next: "village" }
+      ]
+    },
+    profile: {
+      text: "", // dynamic fill with user data below
+      choices: [
+        { text: "Return to village", next: "village" }
+      ]
+    },
+    voting: {
+      text: "Below you can vote for the next thrilling features of VibeQuest.",
+      choices: [
+        { text: "Back to village center", next: "village" }
+      ]
+    }
+  };
+
+  // Voting options with emojis
+  const votingOptions = {
+    "feat-ai-quests": { title: "🤖 More AI-Generated Quests", votes: 0 },
+    "feat-multiplayer": { title: "👥 Enable Multiplayer Mode", votes: 0 },
+    "feat-custom-skins": { title: "🎨 Character Customization", votes: 0 },
+    "feat-daily-challenges": { title: "♾️ Daily Challenges & Rewards", votes: 0 }
+  };
+
+  /* ==== UI Elements ==== */
+  const loginBox = document.getElementById("login-box");
+  const loginBtn = document.getElementById("loginBtn");
+  const orangeIdInput = document.getElementById("orangeIdInput");
+  const userInfo = document.getElementById("user-info");
+  const gameWindow = document.getElementById("game-window");
+  const storyText = document.getElementById("story-text");
+  const choicesDiv = document.getElementById("choices");
+  const tokenBalance = document.getElementById("token-balance");
+  const votingPanel = document.getElementById("voting-panel");
+  const voteList = document.getElementById("vote-list");
+  const refreshVotesBtn = document.getElementById("refreshVotesBtn");
+  const notification = document.getElementById("notification");
+  const lootBox = document.getElementById("loot-box");
+  const lootReward = document.getElementById("loot-reward");
+  const orngTicker = document.getElementById("orng-ticker");
+
+  /* ==== Utilities ==== */
+  function saveState() {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(gameState));
+  }
+  function loadState() {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (saved) {
+      gameState = JSON.parse(saved);
+    }
+  }
+
+  // Show transient notification
+  function showNotification(msg) {
+    notification.textContent = msg;
+    notification.style.opacity = "1";
+    setTimeout(() => {
+      notification.style.opacity = "0";
+    }, 3000);
+  }
+
+  // Animate story typing
+  async function displayStory(text) {
+    storyText.textContent = "";
+    const speed = 30; // ms per character
+    for(let i=0; i<text.length; i++) {
+      storyText.textContent += text.charAt(i);
+      await new Promise(r => setTimeout(r, speed));
+    }
+  }
+
+  // Update token price ticker with lively animation
+  let orngPrice = 1.25;
+  function updateOrngTicker() {
+    // Simulate small random fluctuation
+    orngPrice += (Math.random() - 0.5) * 0.03;
+    orngPrice = Math.max(1.10, Math.min(1.40, orngPrice));
+    orngTicker.textContent = `ORNG Price: $${orngPrice.toFixed(2)}`;
+    // Color shift
+    if (orngPrice > 1.30) orngTicker.style.color = "#ffbf4d";
+    else if (orngPrice < 1.15) orngTicker.style.color = "#ff6d22";
+    else orngTicker.style.color = "#ff981f";
+  }
+  setInterval(updateOrngTicker, 3000);
+
+  /* ==== Game Functions ==== */
+
+  // Orange ID login simulation function
+  function login(orangeId) {
+    orangeId = orangeId.trim();
+    if (!orangeId || orangeId.length < 3) {
+      showNotification("Please enter a valid Orange ID.");
+      return false;
+    }
+    gameState.user = { orangeId, name: "Explorer-" + orangeId.slice(0, 3).toUpperCase() };
+
+    // Give some starting ORNG tokens if none
+    if (gameState.orngBalance <= 0) {
+      gameState.orngBalance = 120; // small buffer
+    }
+    gameState.currentQuest = "start";
+    saveState();
+
+    userInfo.textContent = `Logged in as: ${gameState.user.name} (${gameState.user.orangeId})`;
+    loginBox.style.display = "none";
+    gameWindow.style.display = "flex";
+    votingPanel.style.display = "block";
+
+    updateGameScreen();
+    updateVotingPanel();
+    playSound(clickSound);
+    return true;
+  }
+
+  // Update game UI screen based on current quest
+  async function updateGameScreen() {
+    if (!gameState.currentQuest || !(gameState.currentQuest in quests)) {
+      storyText.textContent = "Unknown quest.";
+      choicesDiv.innerHTML = "";
+      return;
+    }
+
+    const quest = quests[gameState.currentQuest];
+
+    // Dynamically fill profile quest text
+    if(gameState.currentQuest === "profile") {
+      const profileText =
+`🧡 VibeQuest Profile 🧡
+- Orange ID: ${gameState.user.orangeId}
+- Name: ${gameState.user.name}
+- ORNG Balance: ${gameState.orngBalance}
+- Current Quest: ${gameState.currentQuest}`;
+      await displayStory(profileText);
+    } else {
+      await displayStory(quest.text);
+    }
+
+    // Show token balance
+    tokenBalance.textContent = `ORNG: ${gameState.orngBalance}`;
+
+    // Animate rewards (loot box) if quest has animation flag
+    if (quest.animation === "lootBox" && quest.reward) {
+      // Show loot box animation and reward count
+      await showLootBoxAnimation(quest.reward);
+    }
+
+    // Build choices UI
+    choicesDiv.innerHTML = "";
+    for(const choice of quest.choices) {
+      const btn = document.createElement("button");
+      btn.setAttribute("role", "listitem");
+      btn.textContent = choice.text;
+
+      // Disable if cost and no balance
+      if(choice.cost && choice.cost > gameState.orngBalance) {
+        btn.disabled = true;
+        btn.title = `Requires ${choice.cost} ORNG`;
+      }
+
+      btn.addEventListener("click", () => {
+        selectChoice(choice);
+      });
+
+      choicesDiv.appendChild(btn);
+    }
+  }
+
+  // Handle choice selection, update state, give rewards or deduct costs
+  async function selectChoice(choice) {
+    // Deduct cost if any
+    if(choice.cost && choice.cost > 0) {
+      if(gameState.orngBalance < choice.cost) {
+        showNotification("Not enough ORNG tokens!");
+        return;
+      }
+      gameState.orngBalance -= choice.cost;
+      showNotification(`- ${choice.cost} ORNG spent`);
+    }
+    // Add reward if present
+    if(choice.reward && choice.reward > 0) {
+      gameState.orngBalance += choice.reward;
+      showNotification(`+${choice.reward} ORNG earned!`);
+    }
+
+    // Proceed to next quest
+    gameState.currentQuest = choice.next;
+    saveState();
+
+    playSound(clickSound);
+    await updateGameScreen();
+  }
+
+  /* ==== Voting Functions ==== */
+
+  function updateVotingPanel() {
+    voteList.innerHTML="";
+    for(const [key, obj] of Object.entries(votingOptions)) {
+      const li = document.createElement("li");
+      li.textContent = `${obj.title} - Votes: ${obj.votes}`;
+
+      const voteBtn = document.createElement("button");
+      voteBtn.textContent = "Vote";
+      voteBtn.disabled = Boolean(gameState.userVotes[key]);
+      voteBtn.title = voteBtn.disabled ? "You voted already" : "Vote for this feature";
+
+      voteBtn.addEventListener("click", () => {
+        voteFeature(key);
+      });
+
+      li.append(voteBtn);
+      voteList.appendChild(li);
+    }
+  }
+
+  function voteFeature(featureKey) {
+    if(gameState.userVotes[featureKey]) {
+      showNotification("You have already voted!");
+      return;
+    }
+    votingOptions[featureKey].votes++;
+    gameState.userVotes[featureKey] = true;
+    saveState();
+    updateVotingPanel();
+    showNotification(`Thanks for voting "${votingOptions[featureKey].title}"!`);
+    playSound(voteSound);
+  }
+
+  refreshVotesBtn.addEventListener("click", () => {
+    updateVotingPanel();
+    showNotification("Votes refreshed.");
+    playSound(clickSound);
+  });
+
+
+  /* ==== Loot Box Animation ==== */
+  function showLootBoxAnimation(reward) {
+    return new Promise(resolve => {
+      lootReward.textContent = "";
+      lootBox.style.display = "block";
+      lootBox.setAttribute("aria-hidden", "false");
+      lootBox.classList.remove("open");
+
+      // Play open after delay
+      setTimeout(() => {
+        lootBox.classList.add("open");
+        playSound(openBoxSound);
+      }, 600);
+
+      // Show reward text after lid opens
+      setTimeout(() => {
+        lootReward.textContent = `+${reward} ORNG`;
+      }, 1300);
+
+      // Finish animation after 2.5 sec
+      setTimeout(() => {
+        lootBox.style.display = "none";
+        lootBox.setAttribute("aria-hidden", "true");
+        lootReward.textContent = "";
+        resolve();
+      }, 2500);
+    });
+  }
+
+  // Audio setup
+  const clickSound = new Audio('https://actions.google.com/sounds/v1/ui/click.ogg');
+  const voteSound = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
+  const openBoxSound = new Audio('https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg');
+
+  function playSound(sound) {
+    if(sound) {
+      sound.pause();
+      sound.currentTime = 0;
+      sound.volume = 0.4;
+      sound.play();
+    }
+  }
+
+  /* ==== Main Login Event ==== */
+  loginBtn.addEventListener("click", () => {
+    login(orangeIdInput.value);
+  });
+  orangeIdInput.addEventListener("keypress", e => {
+    if(e.key === "Enter") {
+      login(orangeIdInput.value);
+    }
+  });
+
+  /* ==== Load saved state on startup ==== */
+  loadState();
+  if(gameState.user){
+    userInfo.textContent = `Welcome back, ${gameState.user.name} (${gameState.user.orangeId})`;
+    loginBox.style.display = "none";
+    gameWindow.style.display = "flex";
+    votingPanel.style.display = "block";
+    updateGameScreen();
+    updateVotingPanel();
+  }
+
+</script>
+</body>
+</html>
+
